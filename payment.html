@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/> <!-- Defines character encoding -->
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/> <!-- Makes page responsive -->
+<title>Checkout - Sweet Crumbs Bakery</title>
+<link href="CSS/style.css" rel="stylesheet"/>\n</head>
+<body>
+<!-- ===========================
+       NAVIGATION MENU
+       Provides links to different pages of the site
+  ============================ -->
+  <nav>
+    <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="menu.html">Menu</a></li>
+    <li><a href="menu.html#order">Order Online</a></li>
+    <li><a href="gallery.html">Gallery</a></li>
+    <li><a href="payment.html">Payment</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    </ul>
+    </nav>
+<!-- ===================== Page Header ===================== -->
+<header>
+<h1>Sweet Crumbs Bakery - Checkout</h1>
+</header>
+<main>
+<!-- ===================== Order Summary Section ===================== -->
+<section>
+<h2>Your Order</h2>
+<ul id="order-list"></ul> <!-- Dynamic list of cart items will be inserted here -->
+<p><strong>Total: R<span id="order-total">0</span></strong></p> <!-- Shows total order amount -->
+</section>
+<!-- ===================== Delivery or Pickup ===================== -->
+<section>
+<h2>Delivery / Pickup</h2>
+<!-- Radio buttons allow user to choose between pickup or delivery -->
+<label>
+<input checked="" name="delivery" type="radio" value="pickup"/> Pickup (Pay on collection)
+      </label><br/>
+<label>
+<input name="delivery" type="radio" value="delivery"/> Delivery (+R25)
+      </label><br/>
+<!-- Textarea for delivery address (only required if delivery is selected) -->
+<label>
+        Address (required for delivery):<br/>
+<textarea id="address" rows="3"></textarea>
+</label>
+</section>
+<!-- ===================== Customer Details ===================== -->
+<section>
+<h2>Customer Details</h2>
+<!-- Input fields for name and phone -->
+<label>
+        Full Name:<br/>
+<input id="name" type="text"/>
+</label><br/>
+<label>
+        Phone Number:<br/>
+<input id="phone" type="tel"/>
+</label>
+</section>
+<!-- ===================== Payment Options ===================== -->
+<section>
+<h2>Payment Method</h2>
+<!-- Payment method selection -->
+<label><input checked="" name="payment" type="radio" value="card"/> Credit / Debit Card</label><br/>
+<label><input name="payment" type="radio" value="eft"/> EFT (Bank Transfer)</label><br/>
+<label><input name="payment" type="radio" value="cash"/> Cash on Delivery / Pickup</label><br/>
+<!-- Bank details form fields (only required if EFT or Card is selected) -->
+<div id="bank-details">
+<label>Bank Name:<br/>
+<input id="bank-name" type="text"/>
+</label><br/>
+<label>Account Number:<br/>
+<input id="account-number" type="text"/>
+</label><br/>
+<label>Branch Code:<br/>
+<input id="branch-code" type="text"/>
+</label>
+</div>
+</section>
+<!-- ===================== Confirm Order Button ===================== -->
+<section>
+<button onclick="confirmPayment()" type="button">Confirm &amp; Pay</button>
+</section>
+</main>
+<!-- ===================== Footer ===================== -->
+<footer>
+<p>© 2025 Sweet Crumbs Bakery. All Rights Reserved.</p>
+</footer>
+<!-- ===================== JavaScript ===================== -->
+<script>
+    // Get cart items from localStorage (saved from menu/cart page)
+    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+
+    // Elements for displaying order list and total
+    const orderList = document.getElementById("order-list");
+    const orderTotalEl = document.getElementById("order-total");
+
+    // Function to render cart items in the order summary
+    function renderCart() {
+      orderList.innerHTML = ""; // Clear old list
+      let total = 0;
+
+      // If no items are in the cart
+      if (cartItems.length === 0) {
+        orderList.innerHTML = "<li>No items in cart.</li>";
+      } else {
+        // Loop through items and display them
+        cartItems.forEach(item => {
+          const subtotal = item.price * item.quantity;
+          total += subtotal;
+          orderList.innerHTML += `<li>${item.name} x${item.quantity} - R${subtotal}</li>`;
+        });
+      }
+
+      // Add delivery fee if delivery option is selected
+      const deliveryType = document.querySelector('input[name="delivery"]:checked').value;
+      if (deliveryType === "delivery") total += 25;
+
+      // Update total
+      orderTotalEl.innerText = total;
+    }
+
+    // Run renderCart on page load
+    renderCart();
+
+    // Recalculate total when delivery option changes
+    document.querySelectorAll('input[name="delivery"]').forEach(el =>
+      el.addEventListener("change", renderCart)
+    );
+
+    // Function to confirm payment and save order
+    function confirmPayment() {
+      // Collect user inputs
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const deliveryType = document.querySelector('input[name="delivery"]:checked').value;
+      const address = document.getElementById("address").value.trim();
+      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+      const bankName = document.getElementById("bank-name").value.trim();
+      const accountNumber = document.getElementById("account-number").value.trim();
+      const branchCode = document.getElementById("branch-code").value.trim();
+
+      // Validation: ensure required fields are filled
+      if (!name || !phone) {
+        alert("Please fill in your name and phone number.");
+        return;
+      }
+
+      if (deliveryType === "delivery" && !address) {
+        alert("Please provide a delivery address.");
+        return;
+      }
+
+      if ((paymentMethod === "card" || paymentMethod === "eft") && (!bankName || !accountNumber || !branchCode)) {
+        alert("Please complete all banking details.");
+        return;
+      }
+
+      // Save order details in localStorage for thank-you page
+      localStorage.setItem("orderConfirmed", JSON.stringify({
+        cartItems,
+        deliveryType,
+        address,
+        name,
+        phone,
+        paymentMethod,
+        bankDetails: { bankName, accountNumber, branchCode },
+        total: orderTotalEl.innerText
+      }));
+
+      // Show confirmation message
+      alert("Order confirmed! Total: R" + orderTotalEl.innerText);
+
+      // Redirect to thank-you page
+      window.location.href = "thankyou.html";
+    }
+  </script>
+</body>
+</html>
